@@ -12,6 +12,8 @@ export interface Place {
   description: string | null;
 }
 
+export type PlaceMutation = Omit<Place, 'id'>;
+
 export interface Item {
   id: string;
   categoryId: string;

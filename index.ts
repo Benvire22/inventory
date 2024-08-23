@@ -1,9 +1,10 @@
 import express from 'express';
-import fileDb from './fileDb';
 import cors from 'cors';
-import inventoriesRouter from './routers/inventories';
+import fileDb from './fileDb';
 import { corsOptions } from './corsConfig';
+import inventoriesRouter from './routers/inventories';
 import categoriesRouter from './routers/categories';
+import placesRouter from './routers/places';
 
 const app = express();
 const port = 8000;
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use('/inventories', inventoriesRouter);
 app.use('/categories', categoriesRouter);
+app.use('/places', placesRouter);
 
 const run = async () => {
   await fileDb.init();

@@ -6,7 +6,12 @@ const categoriesRouter = express.Router();
 
 categoriesRouter.get('/', async (_, res) => {
   const categories = await fileDb.getCategories();
-  return res.send(categories);
+  return res.send(
+    categories.map((category) => ({
+      id: category.id,
+      title: category.title,
+    })),
+  );
 });
 
 categoriesRouter.get('/:id', async (req, res) => {
@@ -42,7 +47,7 @@ categoriesRouter.delete('/:id', async (req, res) => {
     if (!deletedCategory) {
       return res
         .status(400)
-        .send({ error: 'Category has not be deleted or is not defined!' });
+        .send({ error: 'Category is not be deleted or not defined!' });
     }
 
     return res.send(deletedCategory);

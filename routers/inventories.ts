@@ -7,7 +7,15 @@ const inventoriesRouter = express.Router();
 
 inventoriesRouter.get('/', async (_, res) => {
   const items = await fileDb.getItems();
-  return res.send(items);
+
+  return res.send(
+    items.map((item) => ({
+      id: item.id,
+      categoryId: item.categoryId,
+      placeId: item.placeId,
+      title: item.title,
+    })),
+  );
 });
 
 inventoriesRouter.get('/:id', async (req, res) => {
