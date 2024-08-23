@@ -30,33 +30,25 @@ inventoriesRouter.get('/:id', async (req, res) => {
 });
 
 inventoriesRouter.post('/', imageUpload.single('image'), async (req, res) => {
-  let categoryId = '';
-  let placeId = '';
-
   if (!req.body.title || !req.body.place || !req.body.category) {
     return res
       .status(400)
       .send({ error: 'Title, place or category are required!' });
-  } else if (req.body.place && req.body.category) {
-    const category = req.body.category;
-    const place = req.body.place;
+  }
 
-    const currentCategory = await fileDb.findItem(category, 'category');
-    const currentPlace = await fileDb.findItem(place, 'place');
+  const category = req.body.category;
+  const place = req.body.place;
 
-    if (!currentCategory || !currentPlace) {
-      return res
-        .status(400)
-        .send({ error: 'Category or place is not defined!' });
-    }
+  const currentCategory = await fileDb.findItem(category, 'category');
+  const currentPlace = await fileDb.findItem(place, 'place');
 
-    categoryId = currentCategory.id;
-    placeId = currentPlace.id;
+  if (!currentCategory || !currentPlace) {
+    return res.status(400).send({ error: 'Category or place is not defined!' });
   }
 
   const item: ItemMutation = {
-    categoryId,
-    placeId,
+    categoryId: currentCategory.id,
+    placeId: currentPlace.id,
     title: req.body.title,
     description: req.body.description || null,
     image: req.file ? req.file.filename : null,
@@ -64,6 +56,40 @@ inventoriesRouter.post('/', imageUpload.single('image'), async (req, res) => {
 
   const savedItem = await fileDb.addItem(item);
   return res.send(savedItem);
+});
+
+inventoriesRouter.put('/:id', imageUpload.single('image'), async (req, res) => {
+  const id = req.params.id;
+  if (!req.body.title || !req.body.place || !req.body.category || !id) {
+    return res.status(400).send({ error: 'Error edit item!' });
+  }
+  const category = req.body.category;
+  const place = req.body.place;
+
+  const currentCategory = await fileDb.findItem(category, 'category');
+  const currentPlace = await fileDb.findItem(place, 'place');
+
+  if (!currentCategory || !currentPlace) {
+    return res.status(400).send({ error: 'Category or place is not defined!' });
+  }
+
+  const item: ItemMutation = {
+    categoryId: currentCategory.id,
+    placeId: currentPlace.id,
+    title: req.body.title,
+    description: req.body.description || null,
+    image: req.file ? req.file.filename : null,
+  };
+
+  const editedItem = await fileDb.editItem(item, id);
+
+  if (!editedItem) {
+    return res
+      .status(400)
+      .send({ error: 'Item has not edited or is not defined!' });
+  }
+
+  return res.send(editedItem);
 });
 
 inventoriesRouter.delete('/:id', async (req, res) => {

@@ -39,6 +39,30 @@ const fileDb = {
       };
     }
   },
+  async save() {
+    await fsPromises.writeFile(fileName, JSON.stringify(data, null, 2));
+  },
+  async findItem(
+    currentValue: string,
+    type: string,
+  ): Promise<Category | Place | null> {
+    switch (type) {
+      case 'category':
+        const categories = data.categories;
+        const currentCategory = categories.filter(
+          (category) => category.title === currentValue,
+        );
+        return currentCategory[0];
+      case 'place':
+        const places = data.places;
+        const currentPlace = places.filter(
+          (place) => place.title === currentValue,
+        );
+        return currentPlace[0];
+      default:
+        return null;
+    }
+  },
   async getItems() {
     return data.items;
   },
@@ -79,9 +103,6 @@ const fileDb = {
     await this.save();
     return newPlace;
   },
-  async save() {
-    await fsPromises.writeFile(fileName, JSON.stringify(data, null, 2));
-  },
   async deleteItem(itemId: string) {
     const items = [...data.items];
     const index = items.findIndex((item) => item.id === itemId);
@@ -111,10 +132,7 @@ const fileDb = {
       (category) => category.id === categoryId,
     );
 
-    if (
-      index > -1 &&
-      data.items.filter((item) => item.categoryId !== categoryId).length > 0
-    ) {
+    if (index > -1 && data.items.filter((item) => item.categoryId !== categoryId).length > 0) {
       data.categories.splice(index, 1);
       await this.save();
 
@@ -127,10 +145,7 @@ const fileDb = {
     const places = [...data.places];
     const index = places.findIndex((place) => place.id === placeId);
 
-    if (
-      index > -1 &&
-      data.items.filter((item) => item.placeId !== placeId).length > 0
-    ) {
+    if (index > -1 && data.items.filter((item) => item.placeId !== placeId).length > 0) {
       data.places.splice(index, 1);
       await this.save();
 
@@ -139,23 +154,42 @@ const fileDb = {
       return null;
     }
   },
-  async findItem(
-    currentValue: string,
-    type: string,
-  ): Promise<Category | Place | null> {
-    if (type === 'category') {
-      const categories = data.categories;
-      const currentCategory = categories.filter(
-        (category) => category.title === currentValue,
-      );
+  async editCategory(editedCategories: Category[]) {
+    data.categories = editedCategories;
+    await this.save();
+  },
+  async editPlace(editPlaces: Place[]) {
+    data.places = editPlaces;
+    await this.save();
+  },
+  async editItem(editedItem: ItemMutation, id: string) {
+    const items = [...data.items];
+    const index = items.findIndex((item) => item.id === id);
 
-      return currentCategory[0];
-    } else if (type === 'place') {
-      const places = data.places;
-      const currentPlace = places.filter(
-        (place) => place.title === currentValue,
-      );
-      return currentPlace[0];
+    if (index > -1) {
+      const imagePath = items[index].image;
+
+      if (imagePath) {
+        fs.unlink(path.join(config.publicPath, imagePath), (err) => {
+          if (err) {
+            console.error(err);
+            return;
+          }
+        });
+      }
+
+      items[index] = {
+        ...items[index],
+        categoryId: editedItem.categoryId,
+        placeId: editedItem.placeId,
+        title: editedItem.title,
+        description: editedItem.description,
+        image: editedItem.image,
+      };
+
+      data.items = items;
+      await this.save();
+      return items[index];
     } else {
       return null;
     }

@@ -6,6 +6,7 @@ const categoriesRouter = express.Router();
 
 categoriesRouter.get('/', async (_, res) => {
   const categories = await fileDb.getCategories();
+
   return res.send(
     categories.map((category) => ({
       id: category.id,
@@ -37,6 +38,32 @@ categoriesRouter.post('/', async (req, res) => {
 
   const savedCategory = await fileDb.addCategory(category);
   return res.send(savedCategory);
+});
+
+categoriesRouter.put('/:id', async (req, res) => {
+  const categories = await fileDb.getCategories();
+  const id = req.params.id;
+
+  if (!req.body.title || !id) {
+    return res.status(400).send({ error: 'Error edit category!' });
+  }
+
+  const index = categories.findIndex((category) => category.id === id);
+
+  const editedCategory = {
+    id,
+    title: req.body.title,
+    description: req.body.description || null,
+  };
+
+  if (index !== -1) {
+    categories[index] = editedCategory;
+  } else {
+    return res.status(400).send({ error: 'Category is not found!' });
+  }
+
+  await fileDb.editCategory(categories);
+  return res.send(editedCategory);
 });
 
 categoriesRouter.delete('/:id', async (req, res) => {

@@ -1,11 +1,12 @@
 import express from 'express';
 import fileDb from '../fileDb';
-import { PlaceMutation } from '../types';
+import { Place, PlaceMutation } from '../types';
 
 const placesRouter = express.Router();
 
 placesRouter.get('/', async (_, res) => {
   const places = await fileDb.getPlaces();
+
   return res.send(
     places.map((place) => ({
       id: place.id,
@@ -37,6 +38,32 @@ placesRouter.post('/', async (req, res) => {
 
   const savedPlace = await fileDb.addPlace(place);
   return res.send(savedPlace);
+});
+
+placesRouter.put('/:id', async (req, res) => {
+  const places = await fileDb.getPlaces();
+  const id = req.params.id;
+
+  if (!req.body.title || !id) {
+    return res.status(400).send({ error: 'Error edit place!' });
+  }
+
+  const index = places.findIndex((place) => place.id === id);
+
+  const editedPlace: Place = {
+    id,
+    title: req.body.title,
+    description: req.body.description || null,
+  };
+
+  if (index !== -1) {
+    places[index] = editedPlace;
+  } else {
+    return res.status(400).send({ error: 'Place is not found!' });
+  }
+
+  await fileDb.editPlace(places);
+  return res.send(editedPlace);
 });
 
 placesRouter.delete('/:id', async (req, res) => {
