@@ -4,6 +4,8 @@ export interface Category {
   description: string | null;
 }
 
+export type CategoryMutation = Omit<Category, 'id'>;
+
 export interface Place {
   id: string;
   title: string;
